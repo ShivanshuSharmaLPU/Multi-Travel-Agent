@@ -61,37 +61,32 @@ export default function Landing() {
             <br />with AI agents
           </motion.h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-lg text-muted max-w-2xl mx-auto mb-10 leading-relaxed"
-          >
-            7 specialized AI agents collaborate under a Supervisor to build your perfect trip — 
-            transport, hotels, weather, budget, itinerary, and more. All streamed live.
-          </motion.p>
+        <motion.p
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 0.2 }}
+  className="text-lg text-muted max-w-2xl mx-auto mb-10 leading-relaxed"
+>
+  Every great journey begins with a single destination. Let's plan yours, and turn that dream into your next great story.
+</motion.p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center"
-          >
-            <button
-              onClick={() => nav('/planner')}
-              className="group flex items-center justify-center gap-2 bg-accent text-bg font-bold px-8 py-4 rounded-xl hover:bg-accent/90 transition-all glow-accent text-base"
-            >
-              Start Planning
-              <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-            </button>
-            <button
-              onClick={() => nav('/planner')}
-              className="flex items-center justify-center gap-2 glass border border-border text-text font-semibold px-8 py-4 rounded-xl hover:border-accent/40 transition-all text-base"
-            >
-              <Globe size={16} />
-              View Demo
-            </button>
-          </motion.div>
+       <motion.div
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 0.3 }}
+  className="flex flex-col items-center gap-6"
+>
+  <button
+    onClick={() => nav('/planner')}
+    className="group flex items-center justify-center gap-2 bg-accent text-bg font-bold px-8 py-4 rounded-xl hover:bg-accent/90 transition-all glow-accent text-base"
+  >
+    Start Planning
+    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+  </button>
+  <p className="text-xs text-muted font-mono">
+  ✦ Plan smart &nbsp;·&nbsp; Travel light &nbsp;·&nbsp; Explore more &nbsp;·&nbsp; Come back with stories
+</p>
+</motion.div>
         </div>
       </section>
 

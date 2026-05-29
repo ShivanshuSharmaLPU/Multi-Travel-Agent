@@ -6,7 +6,10 @@ const travelRoutes = require('./routes/travel')
 const app = express()
 const PORT = process.env.PORT || 5000
 
-app.use(cors({ origin: '*' }))
+app.use(cors({
+  origin: process.env.FRONTEND_URL,
+  credentials: true
+}))
 app.use(express.json())
 
 app.get('/health', (req, res) => res.json({ status: 'ok', service: 'VoyageAI Express Backend' }))

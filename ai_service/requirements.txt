@@ -10,4 +10,4 @@ openmeteo-requests==1.2.0
 requests-cache==1.2.0
 retry-requests==2.0.0
 pydantic==2.6.3
-python-3.11.9
+

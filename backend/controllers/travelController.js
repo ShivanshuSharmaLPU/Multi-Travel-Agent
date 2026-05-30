@@ -4,18 +4,33 @@ const https = require('https')
 
 const AI_SERVICE_URL = process.env.AI_SERVICE_URL || 'http://localhost:8000'
 
-// POST: synchronous plan generation
+/**
+ * POST: Generate full travel plan (non-streaming)
+ */
 exports.generatePlan = async (req, res) => {
   try {
-    const response = await axios.post(`${AI_SERVICE_URL}/plan`, req.body, { timeout: 120000 })
-    res.json(response.data)
+    const response = await axios.post(
+      `${AI_SERVICE_URL}/plan`,
+      req.body,
+      { timeout: 120000 }
+    )
+
+    return res.json(response.data)
+
   } catch (err) {
-    console.error('AI Service error:', err.message)
-    res.status(500).json({ error: 'AI service unavailable', message: err.message })
+    console.error('AI Service error:', err.response?.data || err.message)
+
+    return res.status(500).json({
+      error: 'AI service unavailable',
+      message: err.response?.data || err.message
+    })
   }
 }
 
-// GET: SSE streaming - proxies the FastAPI SSE stream
+
+/**
+ * GET: SSE Streaming proxy to FastAPI
+ */
 exports.streamPlan = (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream')
   res.setHeader('Cache-Control', 'no-cache')
@@ -32,32 +47,64 @@ exports.streamPlan = (req, res) => {
   const options = {
     hostname: urlObj.hostname,
     port: urlObj.port || (serviceUrl.startsWith('https') ? 443 : 80),
-    path: urlObj.pathname + '?' + urlObj.searchParams.toString(),
+    path: urlObj.pathname + (urlObj.search ? urlObj.search : ''),
     method: 'GET',
-    headers: { 'Accept': 'text/event-stream' }
+    headers: {
+      Accept: 'text/event-stream'
+    }
   }
 
   const proxyReq = lib.request(options, (proxyRes) => {
+
+    // 🔥 IMPORTANT: handle upstream HTTP errors (like Groq 429)
+    if (proxyRes.statusCode >= 400) {
+      let errorData = ''
+
+      proxyRes.on('data', chunk => {
+        errorData += chunk
+      })
+
+      proxyRes.on('end', () => {
+        res.write(`data: ${JSON.stringify({
+          type: 'error',
+          message: 'AI service error',
+          status: proxyRes.statusCode,
+          details: errorData
+        })}\n\n`)
+        res.end()
+      })
+
+      return
+    }
+
+    // Stream data normally
     proxyRes.on('data', (chunk) => {
       res.write(chunk)
     })
-    proxyRes.on('end', () => res.end())
-    proxyRes.on('error', (err) => {
-      console.error('Proxy stream error:', err)
-      res.write(`data: ${JSON.stringify({ type: 'error', message: 'Stream error: ' + err.message })}\n\n`)
+
+    proxyRes.on('end', () => {
+      res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`)
       res.end()
     })
   })
 
+  // 🔥 Real connection error handler
   proxyReq.on('error', (err) => {
     console.error('AI service connection error:', err.message)
-    res.write(`data: ${JSON.stringify({ type: 'error', message: 'Cannot connect to AI service. Is FastAPI running on port 8000?' })}\n\n`)
+
+    res.write(`data: ${JSON.stringify({
+      type: 'error',
+      message: 'AI service unreachable or rate limited',
+      detail: err.message
+    })}\n\n`)
+
     res.end()
   })
 
-  proxyReq.end()
-
+  // Cleanup if client disconnects
   req.on('close', () => {
     proxyReq.destroy()
   })
+
+  proxyReq.end()
 }
